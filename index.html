@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Godaigo Stone Interaction</title>
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Godaigo Stone Interaction Demo</h1>
+  
+  <div class="game-container">
+    <!-- Increased canvas dimensions to accommodate the larger grid -->
+    <canvas id="hexCanvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+      <div class="player-info">
+        <div class="action-points">AP: <span id="ap-count">5</span>/5</div>
+        <button id="end-turn">End Turn</button>
+      </div>
+      
+      <div class="mode-selector">
+        <div class="mode-button move-mode active" id="move-mode">Movement Mode</div>
+        <div class="mode-button place-mode" id="place-mode">Stone Placement</div>
+      </div>
+      
+      <div class="stone-selector" id="stone-selector" style="display: none;">
+        <div>
+          <div class="stone-button stone-earth" id="place-earth">▲</div>
+          <div class="stone-count" id="earth-count">5/5</div>
+        </div>
+        <div>
+          <div class="stone-button stone-water" id="place-water">◯</div>
+          <div class="stone-count" id="water-count">5/5</div>
+        </div>
+        <div>
+          <div class="stone-button stone-fire" id="place-fire">♦</div>
+          <div class="stone-count" id="fire-count">5/5</div>
+        </div>
+        <div>
+          <div class="stone-button stone-wind" id="place-wind">≋</div>
+          <div class="stone-count" id="wind-count">5/5</div>
+        </div>
+        <div>
+          <div class="stone-button stone-void" id="place-void">✺</div>
+          <div class="stone-count" id="void-count">5/5</div>
+        </div>
+      </div>
+      
+      <div id="status" style="margin-top: 10px;">
+        Click a hex to move, or select a stone and click an adjacent hex to place it.
+      </div>
+    </div>
+    
+    <div class="legend">
+      <h3>Stone Interactions</h3>
+      <div class="legend-grid">
+        <div class="legend-item">
+          <div class="legend-color stone-earth"></div>
+          <div>Earth: Creates impassable barriers</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color stone-water"></div>
+          <div>Water: Mimics adjacent stones</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color stone-fire"></div>
+          <div>Fire: Destroys adjacent stones</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color stone-wind"></div>
+          <div>Wind: Free movement around it</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color stone-void"></div>
+          <div>Void: Nullifies stone abilities</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include external JavaScript files in proper order -->
+  <script src="stones.js"></script>
+  <script src="debugTools.js"></script>
+  <script src="stoneInteractions.js"></script>
+  <script src="animations.js"></script>
+  <script src="hexgrid.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

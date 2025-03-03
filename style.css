@@ -1,0 +1,311 @@
+body {
+    font-family: 'Courier New', monospace;
+    background-color: #111;
+    color: #eee;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    color: #d9b08c;
+    text-shadow: 0 0 5px #b75000;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 900px; /* Increased from 800px */
+    width: 100%;
+}
+
+canvas {
+    background-color: #222;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    height: auto;
+}
+
+.controls {
+    background-color: #222;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.control-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.stone-selector {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 5px;
+}
+
+.mode-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.mode-button {
+    width: 45%;
+    padding: 8px;
+    margin: 0 5px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.mode-button.active {
+    box-shadow: 0 0 10px currentColor;
+    animation: pulse 1s infinite;
+}
+
+.move-mode {
+    background-color: #2a3a4a;
+    color: #58a4f4;
+    border: 2px solid #58a4f4;
+}
+
+.place-mode {
+    background-color: #3a2a3a;
+    color: #f458a4;
+    border: 2px solid #f458a4;
+}
+
+.stone-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin: 0 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stone-button:hover::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.stone-earth {
+    background-color: #233a23;
+    color: #69d83a;
+    border-color: #69d83a;
+}
+
+.stone-water {
+    background-color: #1e2c4a;
+    color: #5894f4;
+    border-color: #5894f4;
+}
+
+.stone-fire {
+    background-color: #3a1a1a;
+    color: #ed1b43;
+    border-color: #ed1b43;
+}
+
+.stone-wind {
+    background-color: #3a3000;
+    color: #ffce00;
+    border-color: #ffce00;
+}
+
+.stone-void {
+    background-color: #2a1e3a;
+    color: #9458f4;
+    border-color: #9458f4;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fire-flicker {
+    0% { opacity: 0.6; }
+    25% { opacity: 1; }
+    50% { opacity: 0.7; }
+    75% { opacity: 0.9; }
+    100% { opacity: 0.6; }
+}
+
+.stone-button.selected {
+    animation: pulse 1s infinite;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.stone-count {
+    font-size: 12px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.action-points {
+    background-color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #b75000;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin: 4px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #d9b08c;
+    color: #333;
+}
+
+.legend {
+    background-color: #222;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+.legend h3, .legend h4 {
+    margin-top: 0;
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+}
+
+#status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #333;
+    min-height: 20px;
+}
+
+/* New styles for debug panel */
+#debug-panel {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    max-width: 300px;
+}
+
+#debug-panel h3 {
+    margin-top: 0;
+    color: #58a4f4;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+#debug-panel button {
+    background-color: #444;
+    color: white;
+    border: 1px solid #666;
+    margin: 5px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+#debug-panel button:hover {
+    background-color: #555;
+}
+
+/* Styles for keyboard shortcut info */
+.shortcuts-info {
+    margin-top: 15px;
+    border-top: 1px solid #444;
+    padding-top: 10px;
+}
+
+.shortcuts-info ul {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+
+.shortcuts-info li {
+    margin-bottom: 5px;
+}
+
+#debug-button {
+    background-color: #2a3a4a;
+    color: #58a4f4;
+    border: 1px solid #58a4f4;
+}
+
+#debug-button:hover {
+    background-color: #3a4a5a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .game-container {
+        max-width: 100%;
+    }
+    
+    .legend-grid {
+        grid-template-columns: 1fr;
+    }
+}
