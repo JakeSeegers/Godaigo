@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godaigo Stone Interaction</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #111;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #d9b08c;
+            text-shadow: 0 0 5px #b75000;
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 800px;
+        }
+        
+        canvas {
+            background-color: #222;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .controls {
+            background-color: #222;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .stone-selector {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+        
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .mode-button {
+            width: 45%;
+            padding: 8px;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .mode-button.active {
+            box-shadow: 0 0 10px currentColor;
+            animation: pulse 1s infinite;
+        }
+        
+        .move-mode {
+            background-color: #2a3a4a;
+            color: #58a4f4;
+            border: 2px solid #58a4f4;
+        }
+        
+        .place-mode {
+            background-color: #3a2a3a;
+            color: #f458a4;
+            border: 2px solid #f458a4;
+        }
+        
+        .stone-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin: 0 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stone-button:hover::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+        
+        .stone-earth { background-color: #233a23; color: #69d83a; border-color: #69d83a; }
+        .stone-water { background-color: #1e2c4a; color: #5894f4; border-color: #5894f4; }
+        .stone-fire { background-color: #3a1a1a; color: #ed1b43; border-color: #ed1b43; }
+        .stone-wind { background-color: #3a3000; color: #ffce00; border-color: #ffce00; }
+        .stone-void { background-color: #2a1e3a; color: #9458f4; border-color: #9458f4; }
+        
+        /* Animation keyframes */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fire-flicker {
+            0% { opacity: 0.6; }
+            25% { opacity: 1; }
+            50% { opacity: 0.7; }
+            75% { opacity: 0.9; }
+            100% { opacity: 0.6; }
+        }
+        
+        .stone-button.selected {
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .stone-count {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .action-points {
+            background-color: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        button {
+            background-color: #b75000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #d9b08c;
+            color: #333;
+        }
+        
+        .legend {
+            background-color: #222;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+        
+        .legend h3 {
+            margin-top: 0;
+        }
+        
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        #status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #333;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Godaigo Stone Interaction Demo</h1>
+    
+    <div class="game-container">
+        <canvas id="hexCanvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            <div class="player-info">
+                <div class="action-points">AP: <span id="ap-count">5</span>/5</div>
+                <button id="end-turn">End Turn</button>
+            </div>
+            
+            <div class="mode-selector">
+                <div class="mode-button move-mode active" id="move-mode">Movement Mode</div>
+                <div class="mode-button place-mode" id="place-mode">Stone Placement</div>
+            </div>
+            
+            <div class="stone-selector" id="stone-selector" style="display: none;">
+                <div>
+                    <div class="stone-button stone-earth" id="place-earth">▲</div>
+                    <div class="stone-count" id="earth-count">5/5</div>
+                </div>
+                <div>
+                    <div class="stone-button stone-water" id="place-water">◯</div>
+                    <div class="stone-count" id="water-count">5/5</div>
+                </div>
+                <div>
+                    <div class="stone-button stone-fire" id="place-fire">♦</div>
+                    <div class="stone-count" id="fire-count">5/5</div>
+                </div>
+                <div>
+                    <div class="stone-button stone-wind" id="place-wind">≋</div>
+                    <div class="stone-count" id="wind-count">5/5</div>
+                </div>
+                <div>
+                    <div class="stone-button stone-void" id="place-void">✺</div>
+                    <div class="stone-count" id="void-count">5/5</div>
+                </div>
+            </div>
+            
+            <div id="status" style="margin-top: 10px;">Click a hex to move, or select a stone and click an adjacent hex to place it.</div>
+        </div>
+        
+        <div class="legend">
+            <h3>Stone Interactions</h3>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <div class="legend-color stone-earth"></div>
+                    <div>Earth: Creates impassable barriers</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stone-water"></div>
+                    <div>Water: Mimics adjacent stones</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stone-fire"></div>
+                    <div>Fire: Destroys adjacent stones</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stone-wind"></div>
+                    <div>Wind: Free movement around it</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stone-void"></div>
+                    <div>Void: Nullifies stone abilities</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STONE_TYPES = {
+            EARTH: { name: 'earth', color: '#69d83a', symbol: '▲', rank: 5 },
+            WATER: { name: 'water', color: '#5894f4', symbol: '◯', rank: 4 },
+            FIRE: { name: 'fire', color: '#ed1b43', symbol: '♦', rank: 3 },
+            WIND: { name: 'wind', color: '#ffce00', symbol: '≋', rank: 2 },
+            VOID: { name: 'void', color: '#9458f4', symbol: '✺', rank: 1 }
+        };
+        
+        // Animation data
+        class AnimationManager {
+            constructor() {
+                this.animations = [];
+                this.requestId = null;
+            }
+            
+            // Add an animation
+            addAnimation(animation) {
+                this.animations.push(animation);
+                
+                // Start animation loop if not already running
+                if (!this.requestId) {
+                    this.animate();
+                }
+            }
+            
+            // Remove completed animations
+            clearCompletedAnimations() {
+                this.animations = this.animations.filter(anim => !anim.completed);
+                
+                // Stop animation loop if no animations are left
+                if (this.animations.length === 0 && this.requestId) {
+                    cancelAnimationFrame(this.requestId);
+                    this.requestId = null;
+                }
+            }
+            
+            // Animation loop
+            animate() {
+                this.requestId = requestAnimationFrame(() => {
+                    const now = Date.now();
+                    
+                    // Update all animations
+                    this.animations.forEach(anim => {
+                        anim.update(now);
+                    });
+                    
+                    // Remove completed animations
+                    this.clearCompletedAnimations();
+                    
+                    // Continue animation loop if there are still animations
+                    if (this.animations.length > 0) {
+                        this.animate();
+                    }
+                });
+            }
+        }
+        
+        // Base animation class
+        class Animation {
+            constructor(duration) {
+                this.startTime = Date.now();
+                this.duration = duration;
+                this.completed = false;
+            }
+            
+            update(now) {
+                const elapsed = now - this.startTime;
+                const progress = Math.min(1, elapsed / this.duration);
+                
+                if (progress >= 1) {
+                    this.completed = true;
+                }
+                
+                return progress;
+            }
+        }
+        
+        // Fire-Water chain reaction animation
+        class FireWaterChainAnimation extends Animation {
+            constructor(grid, waterHexes, duration = 1500) {
+                super(duration);
+                this.grid = grid;
+                this.waterHexes = waterHexes.map(hex => `${hex.q},${hex.r}`);
+                this.flickerRate = 100; // ms between flickers
+                this.lastFlicker = this.startTime;
+                this.flickerState = true;
+            }
+            
+            update(now) {
+                const progress = super.update(now);
+                
+                // Flicker effect
+                if (now - this.lastFlicker > this.flickerRate) {
+                    this.flickerState = !this.flickerState;
+                    this.lastFlicker = now;
+                }
+                
+                // Store animation state for renderer to use
+                this.grid.fireWaterAnimation = {
+                    hexes: this.waterHexes,
+                    flickerState: this.flickerState,
+                    progress: progress
+                };
+                
+                // Re-render the grid
+                this.grid.render();
+                
+                // When animation completes, remove the animation state
+                if (this.completed) {
+                    this.grid.fireWaterAnimation = null;
+                }
+            }
+        }
+        
+        class HexGrid {
+            constructor(canvas, radius = 5) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.radius = radius;
+                this.hexSize = 20; // Size of each hexagon
+                this.hexes = new Map(); // Map coordinates to hex data
+                this.player = { q: 0, r: 0 }; // Player position in axial coordinates
+                this.selectedStone = null; // Currently selected stone type for placement
+                this.mode = 'move'; // 'move' or 'place'
+                this.movableHexes = []; // Hexes that can be moved to
+                
+                // Animation manager
+                this.animationManager = new AnimationManager();
+                this.fireWaterAnimation = null; // Current fire-water chain reaction animation
+                
+                // Initialize the grid
+                this.createGrid();
+                
+                // Set up mouse events
+                this.canvas.addEventListener('click', this.handleClick.bind(this));
+                
+                // Initial render
+                this.calculateMovableHexes();
+                this.render();
+            }
+            
+            createGrid() {
+                // Create a hexagonal grid with the given radius
+                for (let q = -this.radius; q <= this.radius; q++) {
+                    const r1 = Math.max(-this.radius, -q - this.radius);
+                    const r2 = Math.min(this.radius, -q + this.radius);
+                    
+                    for (let r = r1; r <= r2; r++) {
+                        const key = `${q},${r}`;
+                        this.hexes.set(key, {
+                            q, r,
+                            stone: null,
+                            revealed: (Math.abs(q) < 3 && Math.abs(r) < 3) // Reveal center hexes
+                        });
+                    }
+                }
+            }
+            
+            // Convert axial coordinates to pixel coordinates
+            axialToPixel(q, r) {
+                const x = this.hexSize * (3/2 * q);
+                const y = this.hexSize * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
+                return { x, y };
+            }
+            
+            // Convert pixel coordinates to axial coordinates
+            pixelToAxial(x, y) {
+                // Adjust for canvas center
+                x = x - this.canvas.width / 2;
+                y = y - this.canvas.height / 2;
+                
+                const q = (2/3 * x) / this.hexSize;
+                const r = (-1/3 * x + Math.sqrt(3)/3 * y) / this.hexSize;
+                
+                // Need to round to the nearest hex
+                return this.cubeToAxial(this.roundCube(this.axialToCube(q, r)));
+            }
+            
+            // Convert axial to cube coordinates
+            axialToCube(q, r) {
+                return { x: q, y: -q-r, z: r };
+            }
+            
+            // Convert cube to axial coordinates
+            cubeToAxial(cube) {
+                return { q: cube.x, r: cube.z };
+            }
+            
+            // Round cube coordinates to the nearest hex
+            roundCube(cube) {
+                let rx = Math.round(cube.x);
+                let ry = Math.round(cube.y);
+                let rz = Math.round(cube.z);
+                
+                const xDiff = Math.abs(rx - cube.x);
+                const yDiff = Math.abs(ry - cube.y);
+                const zDiff = Math.abs(rz - cube.z);
+                
+                if (xDiff > yDiff && xDiff > zDiff) {
+                    rx = -ry - rz;
+                } else if (yDiff > zDiff) {
+                    ry = -rx - rz;
+                } else {
+                    rz = -rx - ry;
+                }
+                
+                return { x: rx, y: ry, z: rz };
+            }
+            
+            // Get the neighbors of a hex
+            getNeighbors(q, r) {
+                const directions = [
+                    { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
+                    { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 }
+                ];
+                
+                return directions.map(dir => ({
+                    q: q + dir.q,
+                    r: r + dir.r
+                }));
+            }
+            
+            // Check if a hex is valid and revealed
+            isValidHex(q, r) {
+                const key = `${q},${r}`;
+                const hex = this.hexes.get(key);
+                return hex && hex.revealed;
+            }
+            
+            // Get hex at coordinates
+            getHex(q, r) {
+                const key = `${q},${r}`;
+                return this.hexes.get(key);
+            }
+            
+            // Set a stone on a hex
+            setStone(q, r, stoneType) {
+                const key = `${q},${r}`;
+                const hex = this.hexes.get(key);
+                if (hex) {
+                    hex.stone = stoneType;
+                    
+                    // Process stone interactions
+                    this.processStoneInteractions(q, r);
+                    
+                    this.render();
+                    return true;
+                }
+                return false;
+            }
+            
+            // Process stone interactions when a new stone is placed
+            processStoneInteractions(q, r) {
+                const placedHex = this.getHex(q, r);
+                if (!placedHex || !placedHex.stone) return;
+                
+                const placedStoneType = placedHex.stone;
+                const neighbors = this.getNeighbors(q, r);
+                
+                // Check interactions with neighboring stones
+                for (const neighbor of neighbors) {
+                    const neighborHex = this.getHex(neighbor.q, neighbor.r);
+                    if (!neighborHex || !neighborHex.stone) continue;
+                    
+                    const neighborStoneType = neighborHex.stone;
+                    
+                    // Fire destroys adjacent stones (except Void)
+                    if (placedStoneType === STONE_TYPES.FIRE.name && 
+                        neighborStoneType !== STONE_TYPES.VOID.name) {
+                        
+                        // Special case for Water stones - they create a chain reaction
+                        if (neighborStoneType === STONE_TYPES.WATER.name) {
+                            this.triggerWaterFireChainReaction(neighbor.q, neighbor.r);
+                        } else {
+                            // Regular destruction for other stone types
+                            neighborHex.stone = null;
+                            this.updateStatus(`Fire stone destroyed adjacent ${neighborStoneType} stone!`);
+                        }
+                    }
+                }
+            }
+            
+            // Handle the chain reaction of Water stones when they contact Fire
+            triggerWaterFireChainReaction(startQ, startR) {
+                // Keep track of water stones to process
+                const waterStonesToProcess = [{q: startQ, r: startR}];
+                // Keep track of stones we've already processed to avoid infinite loops
+                const processedStones = new Set();
+                // Keep a list of water hexes for animation
+                const waterHexes = [];
+                
+                this.updateStatus("Chain reaction started: water stones mimicking fire's destructive ability!");
+                
+                // First, identify all water stones in the chain (for animation purposes)
+                let toProcess = [{q: startQ, r: startR}];
+                let visited = new Set();
+                
+                while (toProcess.length > 0) {
+                    const current = toProcess.shift();
+                    const key = `${current.q},${current.r}`;
+                    
+                    if (visited.has(key)) continue;
+                    visited.add(key);
+                    
+                    const hex = this.getHex(current.q, current.r);
+                    if (hex && hex.stone === STONE_TYPES.WATER.name) {
+                        waterHexes.push({q: current.q, r: current.r});
+                        
+                        // Add neighboring water stones
+                        const neighbors = this.getNeighbors(current.q, current.r);
+                        for (const neighbor of neighbors) {
+                            const neighborHex = this.getHex(neighbor.q, neighbor.r);
+                            if (neighborHex && neighborHex.stone === STONE_TYPES.WATER.name) {
+                                toProcess.push({q: neighbor.q, r: neighbor.r});
+                            }
+                        }
+                    }
+                }
+                
+                // Create an animation for the chain reaction
+                this.animationManager.addAnimation(
+                    new FireWaterChainAnimation(this, waterHexes)
+                );
+                
+                // Delay the actual destruction to allow animation to play
+                setTimeout(() => {
+                    // Process water stones in a breadth-first manner
+                    while (waterStonesToProcess.length > 0) {
+                        const current = waterStonesToProcess.shift();
+                        const key = `${current.q},${current.r}`;
+                        
+                        // Skip if already processed
+                        if (processedStones.has(key)) continue;
+                        processedStones.add(key);
+                        
+                        const currentHex = this.getHex(current.q, current.r);
+                        if (!currentHex || currentHex.stone !== STONE_TYPES.WATER.name) continue;
+                        
+                        // First, find any adjacent water stones to continue the chain
+                        const neighbors = this.getNeighbors(current.q, current.r);
+                        for (const neighbor of neighbors) {
+                            const neighborHex = this.getHex(neighbor.q, neighbor.r);
+                            if (neighborHex && neighborHex.stone === STONE_TYPES.WATER.name) {
+                                waterStonesToProcess.push({q: neighbor.q, r: neighbor.r});
+                            }
+                        }
+                        
+                        // Then, destroy adjacent non-water, non-void stones (mimicking fire's ability)
+                        for (const neighbor of neighbors) {
+                            const neighborHex = this.getHex(neighbor.q, neighbor.r);
+                            if (neighborHex && neighborHex.stone && 
+                                neighborHex.stone !== STONE_TYPES.WATER.name && 
+                                neighborHex.stone !== STONE_TYPES.VOID.name) {
+                                this.updateStatus(`Chain reaction: Water stone destroyed adjacent ${neighborHex.stone} stone!`);
+                                neighborHex.stone = null;
+                            }
+                        }
+                        
+                        // Finally, destroy this water stone
+                        this.updateStatus(`Water stone at (${current.q},${current.r}) was consumed in the chain reaction!`);
+                        currentHex.stone = null;
+                    }
+                    
+                    // Re-render after all changes
+                    this.render();
+                }, 1500); // Duration of the animation
+            }
+            
+            // Draw a single hexagon
+            drawHex(x, y, size, color, strokeColor = '#444', lineWidth = 1) {
+                this.ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const angle = 2 * Math.PI / 6 * i;
+                    const xPos = x + size * Math.cos(angle);
+                    const yPos = y + size * Math.sin(angle);
+                    
+                    if (i === 0) {
+                        this.ctx.moveTo(xPos, yPos);
+                    } else {
+                        this.ctx.lineTo(xPos, yPos);
+                    }
+                }
+                this.ctx.closePath();
+                
+                if (color) {
+                    this.ctx.fillStyle = color;
+                    this.ctx.fill();
+                }
+                
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = lineWidth;
+                this.ctx.stroke();
+            }
+            
+            // Handle canvas click events
+            handleClick(event) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // Convert pixel coordinates to hex coordinates
+                const hex = this.pixelToAxial(x, y);
+                const q = Math.round(hex.q);
+                const r = Math.round(hex.r);
+                
+                // Check if the clicked hex is valid
+                if (!this.isValidHex(q, r)) {
+                    return;
+                }
+                
+                if (this.mode === 'place' && this.selectedStone) {
+                    // Stone placement mode - place selected stone
+                    this.handleStonePlacement(q, r);
+                } else if (this.mode === 'move') {
+                    // Movement mode - try to move player
+                    this.handlePlayerMovement(q, r);
+                }
+            }
+            
+            // Handle stone placement
+            handleStonePlacement(q, r) {
+                // Check if the hex is adjacent to the player
+                const neighbors = this.getNeighbors(this.player.q, this.player.r);
+                const isAdjacent = neighbors.some(n => n.q === q && n.r === r);
+                
+                if (isAdjacent) {
+                    const targetHex = this.getHex(q, r);
+                    if (!targetHex.stone) {
+                        // Place the stone
+                        if (this.setStone(q, r, this.selectedStone.name)) {
+                            // Deduct from stone pool
+                            decrementStoneCount(this.selectedStone.name);
+                            
+                            this.updateStatus(`Placed ${this.selectedStone.name} stone at (${q}, ${r})`);
+                            this.calculateMovableHexes(); // Recalculate movable hexes after placing stone
+                            this.render();
+                        }
+                    } else {
+                        this.updateStatus(`Cannot place stone on occupied hex`);
+                    }
+                } else {
+                    this.updateStatus(`Cannot place stone on non-adjacent hex`);
+                }
+            }
+            
+            // Handle player movement
+handlePlayerMovement(q, r) {
+    // Check if the hex is in our calculated movable hexes list
+    const isMovable = this.movableHexes.some(h => h.q === q && h.r === r);
+    
+    if (isMovable) {
+        // Get movement cost based on stones
+        const movementCost = this.getMovementCost(q, r);
+        
+        if (movementCost !== Infinity) {
+            let currentAP = parseInt(document.getElementById('ap-count').textContent);
+            const voidCount = stoneCounts[STONE_TYPES.VOID.name];
+            const effectiveAP = currentAP + voidCount;
+            
+            if (effectiveAP >= movementCost) {
+                let costRemaining = movementCost;
+                
+                // Use regular AP first
+                if (currentAP >= costRemaining) {
+                    currentAP -= costRemaining;
+                    costRemaining = 0;
+                } else {
+                    costRemaining -= currentAP;
+                    currentAP = 0;
+                }
+                
+                // Use Void stones if needed
+                if (costRemaining > 0) {
+                    stoneCounts[STONE_TYPES.VOID.name] -= costRemaining;
+                    updateStoneCount(STONE_TYPES.VOID.name);
+                }
+                
+                // Update AP display
+                document.getElementById('ap-count').textContent = currentAP;
+                
+                // Move the player
+                this.player.q = q;
+                this.player.r = r;
+                this.revealAdjacentHexes(q, r);
+                this.updateStatus(`Moved to (${q}, ${r}), cost: ${movementCost} AP (using Void stones if needed)`);
+                
+                // Recalculate movable hexes after moving
+                this.calculateMovableHexes();
+                this.render();
+            } else {
+                this.updateStatus(`Not enough AP to move (cost: ${movementCost}, effective AP: ${effectiveAP})`);
+            }
+        } else {
+            this.updateStatus(`Cannot move to this hex (impassable)`);
+        }
+    } else {
+        this.updateStatus(`Cannot move to this hex`);
+    }
+}
+            
+            // Calculate which hexes are movable from current position
+            calculateMovableHexes() {
+                this.movableHexes = [];
+                const neighbors = this.getNeighbors(this.player.q, this.player.r);
+                const currentAP = parseInt(document.getElementById('ap-count').textContent);
+                
+                for (const neighbor of neighbors) {
+                    const cost = this.getMovementCost(neighbor.q, neighbor.r);
+                    if (cost !== Infinity && cost <= currentAP) {
+                        this.movableHexes.push({
+                            q: neighbor.q,
+                            r: neighbor.r,
+                            cost: cost
+                        });
+                    }
+                }
+            }
+            
+            // Calculate movement cost to enter a hex
+            getMovementCost(q, r) {
+                const hex = this.getHex(q, r);
+                
+                // Can't move to unrevealed or non-existent hexes
+                if (!hex || !hex.revealed) {
+                    return Infinity;
+                }
+                
+                // If no stone, base cost is 1
+                if (!hex.stone) {
+                    return 1;
+                }
+                
+                // Movement costs based on stone type
+                const costs = {
+                    [STONE_TYPES.EARTH.name]: Infinity, // Can't move through Earth
+                    [STONE_TYPES.WATER.name]: 2,        // Costs 2 AP
+                    [STONE_TYPES.FIRE.name]: Infinity,  // Can't move through Fire
+                    [STONE_TYPES.WIND.name]: 0,         // Free movement
+                    [STONE_TYPES.VOID.name]: 1          // Normal cost
+                };
+                
+                let cost = costs[hex.stone];
+                
+                // Apply stone interactions that affect movement
+                
+                // Check for adjacent wind stones (free movement)
+                const neighbors = this.getNeighbors(q, r);
+                for (const neighbor of neighbors) {
+                    const neighborHex = this.getHex(neighbor.q, neighbor.r);
+                    if (neighborHex && neighborHex.stone) {
+                        // Earth + Void: Earth stones can be passed if adjacent to Void
+                        if (hex.stone === STONE_TYPES.EARTH.name && 
+                            neighborHex.stone === STONE_TYPES.VOID.name) {
+                            cost = 1;
+                        }
+                        
+                        // Water + Wind: Water stones cost 0 if adjacent to Wind
+                        if (hex.stone === STONE_TYPES.WATER.name && 
+                            neighborHex.stone === STONE_TYPES.WIND.name) {
+                            cost = 0;
+                        }
+                        
+                        // Wind stones allow free movement to adjacent hexes
+                        if (neighborHex.stone === STONE_TYPES.WIND.name) {
+                            cost = Math.min(cost, 0);
+                        }
+                    }
+                }
+                
+                return cost;
+            }
+            
+            // Reveal hexes adjacent to the player
+            revealAdjacentHexes(q, r) {
+                const neighbors = this.getNeighbors(q, r);
+                for (const neighbor of neighbors) {
+                    const key = `${neighbor.q},${neighbor.r}`;
+                    const hex = this.hexes.get(key);
+                    if (hex) {
+                        hex.revealed = true;
+                    }
+                }
+            }
+            
+            // Update status message
+            updateStatus(message) {
+                document.getElementById('status').textContent = message;
+            }
+            
+            // Render the grid
+            render() {
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Set canvas center
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                // First pass - draw hex backgrounds and wind influence
+                for (const [key, hex] of this.hexes) {
+                    // Skip unrevealed hexes
+                    if (!hex.revealed) continue;
+                    
+                    // Convert hex coordinates to pixel coordinates
+                    const pixelCoords = this.axialToPixel(hex.q, hex.r);
+                    
+                    // Adjust for canvas center
+                    const x = centerX + pixelCoords.x;
+                    const y = centerY + pixelCoords.y;
+                    
+                    // Check for wind stone influence for visual indicator
+                    const windInfluence = this.hasAdjacentStoneType(hex.q, hex.r, STONE_TYPES.WIND.name);
+                    
+                    // Draw hex background
+                    let fillColor = '#2a2a2a';
+                    
+                    // Check if this hex is movable in movement mode
+                    const isMovable = this.mode === 'move' && 
+                        this.movableHexes.some(h => h.q === hex.q && h.r === hex.r);
+                    
+                    if (isMovable) {
+                        // Color based on movement cost
+                        const moveCost = this.getMovementCost(hex.q, hex.r);
+                        if (moveCost === 0) {
+                            // Free movement - green tint
+                            fillColor = '#1a3a2a';
+                        } else {
+                            // Normal movement - blue tint
+                            fillColor = '#1a2a3a';
+                        }
+                    } else if (this.mode === 'place' && 
+                              this.getNeighbors(this.player.q, this.player.r)
+                                  .some(n => n.q === hex.q && n.r === hex.r) && 
+                              !this.getHex(hex.q, hex.r).stone) {
+                        // In placement mode, highlight valid placement hexes
+                        fillColor = '#3a2a3a';
+                    }
+                    
+                    // Add wind influence highlight
+                    if (windInfluence) {
+                        // Light yellow tint for wind influence
+                        fillColor = this.blendColors(fillColor, STONE_TYPES.WIND.color, 0.2);
+                    }
+                    
+                    // Draw the hexagon
+                    this.drawHex(x, y, this.hexSize, fillColor);
+                    
+                    // If in movement mode, draw movement cost and highlight borders
+                    if (isMovable) {
+                        const moveCost = this.getMovementCost(hex.q, hex.r);
+                        // Draw hex outline based on movement cost
+                        let outlineColor = moveCost === 0 ? STONE_TYPES.WIND.color : '#58a4f4';
+                        this.drawHex(x, y, this.hexSize, null, outlineColor, 2);
+                        
+                        // Draw movement cost text
+                        this.ctx.fillStyle = '#fff';
+                        this.ctx.font = '10px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.textBaseline = 'middle';
+                        this.ctx.fillText(moveCost.toString(), x, y + this.hexSize * 0.7);
+                    }
+                }
+                
+                // Second pass - draw stones
+                for (const [key, hex] of this.hexes) {
+                    // Skip unrevealed hexes
+                    if (!hex.revealed) continue;
+                    
+                    // Convert hex coordinates to pixel coordinates
+                    const pixelCoords = this.axialToPixel(hex.q, hex.r);
+                    
+                    // Adjust for canvas center
+                    const x = centerX + pixelCoords.x;
+                    const y = centerY + pixelCoords.y;
+                    
+                    // Draw stone if present
+                    if (hex.stone) {
+                        const stoneInfo = Object.values(STONE_TYPES).find(s => s.name === hex.stone);
+                        if (stoneInfo) {
+                            // Draw stone
+                            this.ctx.fillStyle = stoneInfo.color;
+                            this.ctx.font = '16px Arial';
+                            this.ctx.textAlign = 'center';
+                            this.ctx.textBaseline = 'middle';
+                            
+                            // Apply fire-water animation effect if applicable
+                            if (this.fireWaterAnimation && 
+                                hex.stone === STONE_TYPES.WATER.name &&
+                                this.fireWaterAnimation.hexes.includes(key)) {
+                                if (this.fireWaterAnimation.flickerState) {
+                                    // Blend water with fire color when flickering
+                                    this.ctx.fillStyle = this.blendColors(
+                                        STONE_TYPES.WATER.color,
+                                        STONE_TYPES.FIRE.color,
+                                        0.7
+                                    );
+                                }
+                            }
+                            
+                            this.ctx.fillText(stoneInfo.symbol, x, y);
+                            
+                            // Draw inner hex for water stones that are mimicking adjacent stones
+                            if (hex.stone === STONE_TYPES.WATER.name) {
+                                this.drawWaterMimicryIndicator(hex, x, y);
+                            }
+                            
+                            // Draw special outline for stones with influence
+                            if (hex.stone === STONE_TYPES.WIND.name) {
+                                this.drawHex(x, y, this.hexSize * 0.8, null, STONE_TYPES.WIND.color, 1);
+                            }
+                        }
+                    }
+                    
+                    // Draw player
+                    if (hex.q === this.player.q && hex.r === this.player.r) {
+                        this.ctx.fillStyle = 'white';
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, this.hexSize / 2, 0, 2 * Math.PI);
+                        this.ctx.fill();
+                        this.ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw an indicator inside water stones showing what they're mimicking
+            drawWaterMimicryIndicator(hex, x, y) {
+                const neighbors = this.getNeighbors(hex.q, hex.r);
+                let mimickedType = null;
+                
+                // Check for adjacent stones in this priority order
+                const priorities = [
+                    STONE_TYPES.EARTH.name,  // Earth highest priority (rank 5)
+                    STONE_TYPES.FIRE.name,   // Fire (rank 3)
+                    STONE_TYPES.WIND.name,   // Wind (rank 2)
+                    STONE_TYPES.VOID.name    // Void lowest priority (rank 1)
+                ];
+                
+                // Find highest priority adjacent stone
+                for (const type of priorities) {
+                    if (this.hasAdjacentStoneType(hex.q, hex.r, type)) {
+                        mimickedType = type;
+                        break;
+                    }
+                }
+                
+                // If water is mimicking something, show an indicator
+                if (mimickedType) {
+                    const stoneInfo = Object.values(STONE_TYPES).find(s => s.name === mimickedType);
+                    
+                    // Draw smaller inner hexagon
+                    this.ctx.fillStyle = stoneInfo.color;
+                    this.ctx.globalAlpha = 0.5;
+                    this.drawHex(x, y, this.hexSize / 3, stoneInfo.color);
+                    this.ctx.globalAlpha = 1.0;
+                    
+                    // Draw smaller symbol
+                    this.ctx.font = '10px Arial';
+                    this.ctx.fillStyle = stoneInfo.color;
+                    this.ctx.fillText(stoneInfo.symbol, x, y);
+                }
+            }
+            
+            // Check if a hex has an adjacent stone of the specified type
+            hasAdjacentStoneType(q, r, stoneType) {
+                const neighbors = this.getNeighbors(q, r);
+                
+                for (const neighbor of neighbors) {
+                    const hex = this.getHex(neighbor.q, neighbor.r);
+                    if (hex && hex.stone === stoneType) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            // Blend two colors with a given weight
+            blendColors(color1, color2, weight) {
+                // Convert hex to RGB
+                const parseColor = (color) => {
+                    let r, g, b;
+                    if (color.startsWith('#')) {
+                        r = parseInt(color.slice(1, 3), 16);
+                        g = parseInt(color.slice(3, 5), 16);
+                        b = parseInt(color.slice(5, 7), 16);
+                    } else {
+                        // Simple RGB extraction for rgba format
+                        const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                        if (match) {
+                            r = parseInt(match[1]);
+                            g = parseInt(match[2]);
+                            b = parseInt(match[3]);
+                        } else {
+                            return [0, 0, 0]; // Default if parsing fails
+                        }
+                    }
+                    return [r, g, b];
+                };
+                
+                const [r1, g1, b1] = parseColor(color1);
+                const [r2, g2, b2] = parseColor(color2);
+                
+                // Linear interpolation
+                const r = Math.round(r1 * (1 - weight) + r2 * weight);
+                const g = Math.round(g1 * (1 - weight) + g2 * weight);
+                const b = Math.round(b1 * (1 - weight) + b2 * weight);
+                
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+        }
+        
+        // Stone pool management
+        const stoneCounts = {
+            [STONE_TYPES.EARTH.name]: 5,
+            [STONE_TYPES.WATER.name]: 5,
+            [STONE_TYPES.FIRE.name]: 5,
+            [STONE_TYPES.WIND.name]: 5,
+            [STONE_TYPES.VOID.name]: 5
+        };
+        
+        const stoneCapacity = {
+            [STONE_TYPES.EARTH.name]: 5,
+            [STONE_TYPES.WATER.name]: 5,
+            [STONE_TYPES.FIRE.name]: 5,
+            [STONE_TYPES.WIND.name]: 5,
+            [STONE_TYPES.VOID.name]: 5
+        };
+        
+        function updateStoneCount(type) {
+            document.getElementById(`${type}-count`).textContent = 
+                `${stoneCounts[type]}/${stoneCapacity[type]}`;
+        }
+        
+        function decrementStoneCount(type) {
+            if (stoneCounts[type] > 0) {
+                stoneCounts[type]--;
+                updateStoneCount(type);
+                return true;
+            }
+            return false;
+        }
+        
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('hexCanvas');
+            const grid = new HexGrid(canvas);
+            
+            // Set up movement mode toggle
+            document.getElementById('move-mode').addEventListener('click', function() {
+                grid.mode = 'move';
+                grid.selectedStone = null;
+                document.getElementById('stone-selector').style.display = 'none';
+                document.getElementById('move-mode').classList.add('active');
+                document.getElementById('place-mode').classList.remove('active');
+                document.querySelectorAll('.stone-button').forEach(b => {
+                    b.classList.remove('selected');
+                });
+                grid.calculateMovableHexes();
+                grid.updateStatus('Movement mode activated. Click on a highlighted hex to move.');
+                grid.render();
+            });
+            
+            document.getElementById('place-mode').addEventListener('click', function() {
+                grid.mode = 'place';
+                document.getElementById('stone-selector').style.display = 'flex';
+                document.getElementById('move-mode').classList.remove('active');
+                document.getElementById('place-mode').classList.add('active');
+                grid.updateStatus('Stone placement mode activated. Select a stone type and click an adjacent hex.');
+                grid.render();
+            });
+            
+            // Set up stone selection
+            document.querySelectorAll('.stone-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove selected class from all stones
+                    document.querySelectorAll('.stone-button').forEach(b => {
+                        b.classList.remove('selected');
+                    });
+                    
+                    const stoneType = this.id.split('-')[1];
+                    if (stoneCounts[stoneType] > 0) {
+                        grid.selectedStone = STONE_TYPES[stoneType.toUpperCase()];
+                        grid.updateStatus(`Selected ${stoneType} stone for placement`);
+                        this.classList.add('selected');
+                    } else {
+                        grid.selectedStone = null;
+                        grid.updateStatus(`No ${stoneType} stones left in your pool`);
+                    }
+                });
+            });
+            
+            // End turn button
+            document.getElementById('end-turn').addEventListener('click', function() {
+                document.getElementById('ap-count').textContent = '5';
+                grid.calculateMovableHexes(); // Recalculate movable hexes after AP refresh
+                grid.render();
+                grid.updateStatus('Turn ended. Action Points restored.');
+            });
+            
+            // Update initial stone counts
+            Object.keys(stoneCounts).forEach(updateStoneCount);
+        });
+    </script>
+</body>
+</html>
